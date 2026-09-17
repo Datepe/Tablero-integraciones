@@ -18,9 +18,14 @@ Tablero interactivo para el seguimiento y gestión de requerimientos, tareas e i
 
 ## 📁 Estructura del Proyecto
 
-- `tablero.html`: Interfaz de usuario completa (SPA) en modo oscuro.
-- `app.py`: Servidor HTTP ligero en Python para servir la aplicación y endpoints API locales.
+- `index.html`: Interfaz de usuario completa (SPA) en modo oscuro.
+- `app.py`: Servidor HTTP ligero en Python para servir la aplicación localmente.
 - `.gitignore`: Archivos y carpetas ignorados por control de versiones.
+
+## 🌐 Acceso Online
+
+La aplicación se puede acceder directamente desde cualquier navegador a través de GitHub Pages:
+👉 **[https://datepe.github.io/Tablero-integraciones/](https://datepe.github.io/Tablero-integraciones/)**
 
 ## 🛠️ Ejecución Local
 
@@ -29,4 +34,4 @@ Tablero interactivo para el seguimiento y gestión de requerimientos, tareas e i
    ```bash
    python app.py
    ```
-3. Abre tu navegador en [http://localhost:8000/tablero.html](http://localhost:8000/tablero.html).
+3. Abre tu navegador en [http://localhost:8000/index.html](http://localhost:8000/index.html) o [http://localhost:8000/](http://localhost:8000/).
