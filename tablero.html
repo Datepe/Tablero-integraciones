@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Requerimientos</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --surface: #111827;
+      --surface-card: #1f2937;
+      --surface-hover: #374151;
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #374151;
+      --border-subtle: #1f2937;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --teal: #06b6d4;
+    }
+
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 16px;
+    }
+    .header-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .status-badge { font-size: 0.8rem; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .search-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: 260px;
+    }
+    .search-box:focus { outline: none; border-color: var(--accent); }
+
+    button {
+      border: none;
+      padding: 9px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--surface-card); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface-hover); }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-purple:hover { background: #7c3aed; }
+    .btn-danger { background: transparent; color: var(--danger); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+    .btn-warning { background: #b45309; color: white; }
+    .btn-warning:hover { background: #d97706; }
+
+    /* Estado General Manual */
+    .status-pill {
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(37, 99, 235, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    .status-input-inline {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: #93c5fd;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      width: 260px;
+      max-width: 100%;
+    }
+    .status-input-inline:focus { outline: none; border-color: var(--accent); }
+
+    /* Paneles Destacados de Inicio */
+    .dashboard-top-panels {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .info-banner {
+      border-radius: 12px;
+      padding: 14px 18px;
+    }
+    .banner-tomorrow {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.12));
+      border: 1px solid rgba(59, 130, 246, 0.35);
+    }
+    .banner-platform {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(6, 182, 212, 0.12));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .banner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .banner-title { font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .banner-tomorrow .banner-title { color: #93c5fd; }
+    .banner-platform .banner-title { color: #6ee7b7; }
+    .banner-date-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; font-weight: 600; }
+    .banner-tomorrow .banner-date-badge { background: rgba(37, 99, 235, 0.25); color: #bfdbfe; }
+    .banner-platform .banner-date-badge { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; }
+
+    .banner-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 8px;
+    }
+    .banner-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+    .banner-item .req-tag {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(37, 99, 235, 0.2);
+      color: #60a5fa;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Grid de requerimientos */
+    .section-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 16px 0; color: var(--text); }
+    .req-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 20px;
+    }
+    .req-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: border-color 0.2s ease, transform 0.15s ease;
+    }
+    .req-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .req-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .req-title { font-size: 1.05rem; font-weight: 600; line-height: 1.4; margin: 0; }
+    .req-meta { font-size: 0.8rem; color: var(--text-muted); }
+
+    .req-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .stat-item { text-align: center; }
+    .stat-val { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+    .stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+    }
+
+    /* Modal / Workspace */
+    .workspace-overlay, .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .workspace-modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 1440px;
+      height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .workspace-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .workspace-title-area { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex: 1; }
+    .workspace-columns {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(270px, 1fr));
+      gap: 16px;
+      padding: 20px 24px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      flex: 1;
+      background: var(--bg);
+    }
+
+    .work-col {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .work-col.drag-over {
+      border-color: var(--accent);
+      background: rgba(37, 99, 235, 0.05);
+    }
+    .work-col-header {
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .badge-count {
+      background: var(--surface-card);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+    }
+    .work-col-content {
+      padding: 12px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 50px;
+    }
+
+    /* Tarjetas de Tareas */
+    .item-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.85rem;
+      word-break: break-word;
+      cursor: grab;
+      user-select: none;
+      transition: opacity 0.15s ease;
+    }
+    .item-card:active { cursor: grabbing; }
+    .item-card.dragging { opacity: 0.35; }
+    .item-card.completed { opacity: 0.7; }
+    .item-card.completed .item-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .item-main-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
+    }
+    .item-actions-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      width: 100%;
+      padding-top: 4px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      flex-wrap: wrap;
+    }
+
+    .drag-handle {
+      color: var(--text-muted);
+      cursor: grab;
+      font-size: 0.9rem;
+      opacity: 0.5;
+      line-height: 1;
+      padding-top: 2px;
+    }
+    .drag-handle:hover { opacity: 1; }
+
+    /* Badges */
+    .item-date-badge {
+      font-size: 0.72rem;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .item-date-badge.blue {
+      background: rgba(37, 99, 235, 0.15);
+      color: #93c5fd;
+      border-color: rgba(37, 99, 235, 0.3);
+    }
+    .platform-badge {
+      font-size: 0.72rem;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
+    .btn-icon {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      cursor: pointer;
+      padding: 2px 5px;
+      font-size: 0.95rem;
+      line-height: 1;
+      border-radius: 4px;
+    }
+    .btn-icon:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+    .btn-icon.delete:hover { color: var(--danger); background: rgba(239, 68, 68, 0.15); }
+
+    .move-select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      padding: 2px 4px;
+      cursor: pointer;
+    }
+
+    /* Formularios de entrada */
+    /* Formularios de pie de columna */
+    .add-form {
+      padding: 10px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    
+    .add-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .add-form input[type="text"] {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .add-form input[type="date"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 8px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .platform-toggle-label {
+      font-size: 0.75rem;
+      color: #a7f3d0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      white-space: nowrap;
+      height: 100%;
+    }
+    .platform-toggle-label input { accent-color: var(--success); cursor: pointer; }
+
+    .btn-submit-task {
+      grid-column: span 2;
+      width: 100%;
+      padding: 7px 12px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .add-form input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .add-form input:focus { outline: none; border-color: var(--accent); }
+
+    .platform-toggle-label {
+      font-size: 0.78rem;
+      color: #a7f3d0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+    .platform-toggle-label input { accent-color: var(--success); cursor: pointer; }
+
+    /* Modales */
+    .modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      width: 480px;
+      max-width: 95%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-box input, .modal-box textarea {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .modal-box textarea { resize: vertical; min-height: 80px; }
+    .modal-box input:focus, .modal-box textarea:focus { outline: none; border-color: var(--accent); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <h1>Panel de Requerimientos</h1>
+      <span class="status-badge" id="syncStatus" style="color: var(--warning);">● Conectando a Google Drive...</span>
+    </div>
+    <div class="header-actions">
+      <input type="text" class="search-box" id="searchInput" placeholder="Buscar por código, título o estado..." oninput="renderDashboard()">
+      <button class="btn-secondary" onclick="openRecurringModal()">⚙ Plantilla Recurrentes</button>
+      <button class="btn-primary" onclick="openCreateModal()">+ Nuevo Requerimiento</button>
+    </div>
+  </header>
+
+  <!-- Paneles destacados superiores -->
+  <div class="dashboard-top-panels">
+    <section class="info-banner banner-tomorrow" id="tomorrowBanner" style="display: none;">
+      <div class="banner-header">
+        <span class="banner-title">📅 Pendientes para Mañana</span>
+        <span class="banner-date-badge" id="tomorrowDateLabel">Fecha</span>
+      </div>
+      <div class="banner-list" id="tomorrowList"></div>
+    </section>
+
+    <section class="info-banner banner-platform" id="platformBanner" style="display: none;">
+      <div class="banner-header">
+        <span class="banner-title">⚡ Tareas con Plataforma</span>
+        <span class="banner-date-badge" id="platformCountLabel">0 pendientes</span>
+      </div>
+      <div class="banner-list" id="platformList"></div>
+    </section>
+  </div>
+
+  <h2 class="section-title">Requerimientos Activos</h2>
+  <main id="mainGrid" class="req-grid"></main>
+
+  <!-- Espacio de Trabajo del Requerimiento -->
+  <div class="workspace-overlay" id="workspaceOverlay">
+    <div class="workspace-modal">
+      <div class="workspace-header">
+        <div class="workspace-title-area">
+          <span class="status-pill" id="wsReqCodeBadge">REQ-000</span>
+          <h2 id="wsReqTitle" style="margin: 0; font-size: 1.25rem;">Título</h2>
+          <span id="wsReqRequester" style="color: var(--text-muted); font-size: 0.85rem;"></span>
+          
+          <!-- Input manual para el Estado General -->
+          <div style="display: flex; align-items: center; gap: 6px; margin-left: auto;">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Estado General:</span>
+            <input type="text" id="wsReqStatusInput" class="status-input-inline" placeholder="Escribe el estado general aquí..." onchange="updateCurrentReqStatus(this.value)" onkeydown="if(event.key==='Enter') this.blur()">
+          </div>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="btn-danger" onclick="deleteCurrentReq()">Eliminar Requerimiento</button>
+          <button class="btn-secondary" onclick="closeWorkspace()">Cerrar ✕</button>
+        </div>
+      </div>
+
+      <div class="workspace-columns">
+        <!-- 1. Tareas por Hacer -->
+        <div class="work-col" data-col="todo" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'todo')">
+          <div class="work-col-header" style="color: #60a5fa;">
+            <span>Tareas por Hacer</span>
+            <span class="badge-count" id="countTodo">0</span>
+          </div>
+          <div class="work-col-content" id="listTodo"></div>
+          
+          <div class="add-form">
+            <input type="text" id="inputTodo" placeholder="Descripción de la tarea..." onkeydown="if(event.key==='Enter') addTodo()">
+            <div class="add-form-row">
+              <input type="date" id="inputTodoDate" style="flex: 1;" title="Fecha opcional">
+              <label class="platform-toggle-label" title="Marca si requiere gestión en plataforma">
+                <input type="checkbox" id="inputTodoPlatform">
+                <span>⚡ Plataforma</span>
+              </label>
+              <button class="btn-primary" onclick="addTodo()">+ Agregar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Tareas Completadas -->
+        <div class="work-col" data-col="done" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'done')">
+          <div class="work-col-header" style="color: var(--success);">
+            <span>Tareas Completadas</span>
+            <span class="badge-count" id="countDone">0</span>
+          </div>
+          <div class="work-col-content" id="listDone"></div>
+          <div style="padding: 12px; text-align: center; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border); flex-shrink: 0;">
+            Arrastra tareas aquí o marca el checkbox
+          </div>
+        </div>
+
+        <!-- 3. Tareas Recurrentes -->
+        <div class="work-col" data-col="recurring" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'recurring')">
+          <div class="work-col-header" style="color: var(--purple);">
+            <span>Tareas Recurrentes</span>
+            <span class="badge-count" id="countRecurring">0</span>
+          </div>
+          <div class="work-col-content" id="listRecurring"></div>
+          <div class="add-form">
+            <div class="add-form-row">
+              <input type="text" id="inputRecurring" placeholder="Nueva recurrente para todos..." onkeydown="if(event.key==='Enter') addRecurring()" style="flex: 1;">
+              <button class="btn-primary" onclick="addRecurring()">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Fechas Importantes -->
+        <div class="work-col" data-col="dates" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event, 'dates')">
+          <div class="work-col-header" style="color: var(--warning);">
+            <span>Fechas Importantes</span>
+            <span class="badge-count" id="countDates">0</span>
+          </div>
+          <div class="work-col-content" id="listDates"></div>
+          
+          <div class="add-form">
+            <input type="text" id="inputDateTitle" placeholder="Hito (ej: Pase a QA, Congelamiento)" onkeydown="if(event.key==='Enter') addDateMilestone()">
+            <div class="add-form-row">
+              <input type="date" id="inputDateVal" style="flex: 1;" onkeydown="if(event.key==='Enter') addDateMilestone()">
+              <button class="btn-warning" onclick="addDateMilestone()">Guardar Fecha</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Editar Tarea / Hito -->
+  <div class="modal-backdrop" id="editItemModal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin: 0;">Editar Elemento</h3>
+        <button class="btn-secondary" onclick="closeEditModal()" style="padding:4px 8px;">✕</button>
+      </div>
+      <div>
+        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Descripción / Texto:</label>
+        <textarea id="editItemText"></textarea>
+      </div>
+      <div>
+        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Fecha asignada (opcional):</label>
+        <input type="date" id="editItemDate" style="width:100%;">
+      </div>
+      <div id="editPlatformRow">
+        <label class="platform-toggle-label">
+          <input type="checkbox" id="editItemPlatform">
+          <span>⚡ Marcar como Tarea con Plataforma</span>
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
+        <button class="btn-primary" onclick="saveItemEdit()">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Plantilla Recurrentes -->
+  <div class="modal-backdrop" id="recurringModal">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin: 0; color:var(--purple);">Plantilla de Recurrentes (en Drive)</h3>
+        <button class="btn-secondary" onclick="closeRecurringModal()" style="padding:4px 8px;">✕</button>
+      </div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin:0;">
+        Estas tareas se sincronizan en Google Drive y se agregan a todos tus requerimientos actuales y futuros.
+      </p>
+      <div id="masterRecurringList" style="max-height: 240px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;"></div>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="inputNewMasterTask" placeholder="Nueva tarea recurrente..." style="flex:1;" onkeydown="if(event.key==='Enter') addMasterRecurring()">
+        <button class="btn-purple" onclick="addMasterRecurring()">Agregar</button>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeRecurringModal()">Listo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Crear Requerimiento -->
+  <div class="modal-backdrop" id="createModalOverlay">
+    <div class="modal-box">
+      <h3 style="margin: 0;">Nuevo Requerimiento / Integración</h3>
+      <input type="text" id="newReqCode" placeholder="Código (ej: REQ-025 o Ticket)">
+      <input type="text" id="newReqTitle" placeholder="Nombre de la Integración o Requerimiento">
+      <input type="text" id="newReqRequester" placeholder="Solicitante / Proyecto / Área">
+      <div>
+        <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:4px;">Estado General Inicial:</label>
+        <input type="text" id="newReqStatus" placeholder="Ej: En Análisis, Espera de arquitectura, En Desarrollo..." value="En Análisis">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeCreateModal()">Cancelar</button>
+        <button class="btn-primary" onclick="createRequirement()">Crear y Abrir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbx5xLh6B0PC0jI2FvVIajZvUAzO7lEkEXEabE1hUg5B5_6gpdYB1ZzhTuihvOqs4r98/exec";
+
+    let state = [];
+    let masterRecurringTasks = [];
+    let activeReqId = null;
+    let draggedItem = null;
+    let editingContext = null;
+
+    function setStatus(text, color) {
+      const el = document.getElementById("syncStatus");
+      el.textContent = text;
+      el.style.color = color;
+    }
+
+    function getTomorrowISODate() {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function normalizeTask(item) {
+      if (typeof item === "string") {
+        return { text: item, date: "", isPlatform: false };
+      }
+      return {
+        text: item.text || "",
+        date: item.date || "",
+        isPlatform: Boolean(item.isPlatform)
+      };
+    }
+
+    async function loadDataFromDrive() {
+      setStatus("● Conectando a Google Drive...", "var(--warning)");
+      try {
+        const resReqs = await fetch(DRIVE_API_URL, { method: "GET", redirect: "follow" });
+        const dataReqs = await resReqs.json();
+        state = Array.isArray(dataReqs) ? dataReqs : [];
+        localStorage.setItem("tablero_reqs_cache_v2", JSON.stringify(state));
+
+        try {
+          const resRec = await fetch(`${DRIVE_API_URL}?type=recurring`, { method: "GET", redirect: "follow" });
+          masterRecurringTasks = await resRec.json();
+          if (!Array.isArray(masterRecurringTasks)) masterRecurringTasks = [];
+        } catch(e) {
+          console.warn("No se pudo cargar la plantilla de recurrentes", e);
+        }
+
+        setStatus("● Sincronizado con Google Drive", "var(--success)");
+      } catch (err) {
+        console.error(err);
+        setStatus("⚠ Sin conexión a Drive (usando copia local)", "var(--danger)");
+        state = JSON.parse(localStorage.getItem("tablero_reqs_cache_v2")) || [];
+      }
+      renderDashboard();
+    }
+
+    let debounceTimer = null;
+    function syncToDrive() {
+      localStorage.setItem("tablero_reqs_cache_v2", JSON.stringify(state));
+      renderDashboard();
+      if (activeReqId) renderWorkspace();
+
+      setStatus("● Guardando en Drive...", "var(--warning)");
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(async () => {
+        try {
+          await fetch(DRIVE_API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(state)
+          });
+          setStatus("● Guardado en Google Drive", "var(--success)");
+        } catch (err) {
+          console.error(err);
+          setStatus("⚠ Error al guardar en Drive", "var(--danger)");
+        }
+      }, 400);
+    }
+
+    async function syncMasterRecurringToDrive() {
+      renderMasterRecurring();
+      try {
+        await fetch(`${DRIVE_API_URL}?type=recurring`, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(masterRecurringTasks)
+        });
+      } catch (err) {
+        console.error("Error guardando plantilla recurrente:", err);
+      }
+    }
+
+    function renderDashboard() {
+      const tomorrowISO = getTomorrowISODate();
+      const tomorrowBanner = document.getElementById("tomorrowBanner");
+      const tomorrowList = document.getElementById("tomorrowList");
+      document.getElementById("tomorrowDateLabel").textContent = `Mañana (${tomorrowISO})`;
+
+      const platformBanner = document.getElementById("platformBanner");
+      const platformList = document.getElementById("platformList");
+
+      const tomorrowItems = [];
+      const platformItems = [];
+
+      state.forEach(req => {
+        if (!req.status) req.status = "En Análisis";
+        if (!req.todo) req.todo = [];
+        if (!req.done) req.done = [];
+        if (!req.dates) req.dates = [];
+
+        req.todo.forEach((t, idx) => {
+          const item = normalizeTask(t);
+          if (item.date === tomorrowISO) {
+            tomorrowItems.push({
+              type: "todo",
+              reqId: req.id,
+              reqCode: req.code,
+              index: idx,
+              text: item.text,
+              date: item.date,
+              isPlatform: item.isPlatform
+            });
+          }
+          if (item.isPlatform) {
+            platformItems.push({
+              reqId: req.id,
+              reqCode: req.code,
+              index: idx,
+              text: item.text,
+              date: item.date
+            });
+          }
+        });
+
+        req.dates.forEach((d, idx) => {
+          if (d.date === tomorrowISO) {
+            tomorrowItems.push({
+              type: "date",
+              reqId: req.id,
+              reqCode: req.code,
+              index: idx,
+              text: d.title,
+              date: d.date
+            });
+          }
+        });
+      });
+
+      // Banner Mañana
+      if (tomorrowItems.length > 0) {
+        tomorrowBanner.style.display = "block";
+        tomorrowList.innerHTML = tomorrowItems.map(item => `
+          <div class="banner-item">
+            <span class="req-tag">${item.reqCode}</span>
+            <span style="flex: 1; color: var(--text);">${item.text}</span>
+            ${item.isPlatform ? `<span class="platform-badge">⚡ Plat.</span>` : ''}
+            ${item.type === 'todo' ? `
+              <input type="checkbox" title="Marcar completada" onchange="completeDashboardTask('${item.reqId}', ${item.index})" style="accent-color: var(--accent); cursor: pointer;">
+            ` : `<span class="item-date-badge">Hito</span>`}
+          </div>
+        `).join('');
+      } else {
+        tomorrowBanner.style.display = "none";
+      }
+
+      // Banner Plataforma
+      if (platformItems.length > 0) {
+        platformBanner.style.display = "block";
+        document.getElementById("platformCountLabel").textContent = `${platformItems.length} pendiente${platformItems.length > 1 ? 's' : ''}`;
+        platformList.innerHTML = platformItems.map(item => `
+          <div class="banner-item">
+            <span class="req-tag">${item.reqCode}</span>
+            <span style="flex: 1; color: var(--text);">${item.text}</span>
+            ${item.date ? `<span class="item-date-badge blue">${item.date}</span>` : ''}
+            <input type="checkbox" title="Marcar completada" onchange="completeDashboardTask('${item.reqId}', ${item.index})" style="accent-color: var(--success); cursor: pointer;">
+          </div>
+        `).join('');
+      } else {
+        platformBanner.style.display = "none";
+      }
+
+      // Requerimientos con Filtro de Texto
+      const grid = document.getElementById("mainGrid");
+      const search = (document.getElementById("searchInput").value || "").toLowerCase();
+      grid.innerHTML = "";
+
+      const filtered = state.filter(r => {
+        return (r.code || "").toLowerCase().includes(search) || 
+               (r.title || "").toLowerCase().includes(search) || 
+               (r.requester || "").toLowerCase().includes(search) ||
+               (r.status || "").toLowerCase().includes(search);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <h2>No hay integraciones que coincidan</h2>
+            <p>Prueba con otra búsqueda o haz clic en "+ Nuevo Requerimiento".</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(req => {
+        if (!req.status) req.status = "En Análisis";
+        if (!req.todo) req.todo = [];
+        if (!req.done) req.done = [];
+        if (!req.recurring) req.recurring = [];
+        if (!req.dates) req.dates = [];
+
+        const card = document.createElement("div");
+        card.className = "req-card";
+        card.onclick = () => openWorkspace(req.id);
+
+        card.innerHTML = `
+          <div class="req-header">
+            <span class="status-pill">${req.status}</span>
+            <span class="req-meta">${req.code} • ${req.requester}</span>
+          </div>
+          <h3 class="req-title">${req.title}</h3>
+
+          <div class="req-stats">
+            <div class="stat-item">
+              <div class="stat-val" style="color:#60a5fa">${req.todo.length}</div>
+              <div class="stat-label">Por hacer</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" style="color:var(--success)">${req.done.length}</div>
+              <div class="stat-label">Completadas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" style="color:var(--purple)">${req.recurring.length}</div>
+              <div class="stat-label">Recurrentes</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-val" style="color:var(--warning)">${req.dates.length}</div>
+              <div class="stat-label">Fechas</div>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Actualiza el Estado General manual desde el input de la cabecera
+    function updateCurrentReqStatus(newStatusText) {
+      if (!activeReqId) return;
+      const req = state.find(r => r.id === activeReqId);
+      if (req) {
+        req.status = newStatusText.trim() || "En Análisis";
+        document.getElementById("wsReqCodeBadge").textContent = `${req.code} • ${req.status}`;
+        syncToDrive();
+      }
+    }
+
+    function completeDashboardTask(reqId, idx) {
+      const req = state.find(r => r.id === reqId);
+      if (req && req.todo[idx]) {
+        const item = req.todo.splice(idx, 1)[0];
+        req.done.unshift(item);
+        syncToDrive();
+      }
+    }
+
+    function openCreateModal() {
+      document.getElementById("createModalOverlay").style.display = "flex";
+      document.getElementById("newReqCode").value = `REQ-${state.length + 1}`;
+      document.getElementById("newReqTitle").value = "";
+      document.getElementById("newReqRequester").value = "";
+      document.getElementById("newReqStatus").value = "En Análisis";
+      document.getElementById("newReqTitle").focus();
+    }
+    function closeCreateModal() {
+      document.getElementById("createModalOverlay").style.display = "none";
+    }
+
+    function createRequirement() {
+      const code = document.getElementById("newReqCode").value.trim();
+      const title = document.getElementById("newReqTitle").value.trim();
+      const requester = document.getElementById("newReqRequester").value.trim();
+      const status = document.getElementById("newReqStatus").value.trim() || "En Análisis";
+      if (!title) return;
+
+      const newReq = {
+        id: Date.now().toString(),
+        code: code || `REQ-${state.length + 1}`,
+        title,
+        requester: requester || "General",
+        status: status,
+        todo: [],
+        done: [],
+        recurring: [...masterRecurringTasks],
+        dates: []
+      };
+
+      state.unshift(newReq);
+      syncToDrive();
+      closeCreateModal();
+      openWorkspace(newReq.id);
+    }
+
+    function openRecurringModal() {
+      document.getElementById("recurringModal").style.display = "flex";
+      renderMasterRecurring();
+    }
+    function closeRecurringModal() {
+      document.getElementById("recurringModal").style.display = "none";
+    }
+    function renderMasterRecurring() {
+      const list = document.getElementById("masterRecurringList");
+      if (masterRecurringTasks.length === 0) {
+        list.innerHTML = `<span style="font-size:0.8rem; color:var(--text-muted);">No hay tareas recurrentes en la plantilla.</span>`;
+        return;
+      }
+      list.innerHTML = masterRecurringTasks.map((t, idx) => `
+        <div class="item-card" style="padding:6px 10px;">
+          <div class="item-main-row">
+            <span style="color:var(--purple);">↻</span>
+            <span style="flex:1;">${typeof t === 'string' ? t : t.text}</span>
+            <button class="btn-icon delete" onclick="removeMasterRecurring(${idx})">&times;</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addMasterRecurring() {
+      const input = document.getElementById("inputNewMasterTask");
+      const val = input.value.trim();
+      if (!val) return;
+
+      if (!masterRecurringTasks.includes(val)) {
+        masterRecurringTasks.push(val);
+        syncMasterRecurringToDrive();
+      }
+
+      let updated = 0;
+      state.forEach(req => {
+        if (!req.recurring) req.recurring = [];
+        const exists = req.recurring.some(r => (typeof r === 'string' ? r : r.text) === val);
+        if (!exists) {
+          req.recurring.push(val);
+          updated++;
+        }
+      });
+
+      input.value = "";
+      if (updated > 0) syncToDrive();
+    }
+
+    function removeMasterRecurring(idx) {
+      masterRecurringTasks.splice(idx, 1);
+      syncMasterRecurringToDrive();
+    }
+
+    function openWorkspace(id) {
+      activeReqId = id;
+      const req = state.find(r => r.id === id);
+      if (!req) return;
+
+      if (!req.status) req.status = "En Análisis";
+      if (!req.dates) req.dates = [];
+      if (!req.todo) req.todo = [];
+      if (!req.done) req.done = [];
+      if (!req.recurring) req.recurring = [];
+
+      const badge = document.getElementById("wsReqCodeBadge");
+      badge.textContent = `${req.code} • ${req.status}`;
+
+      document.getElementById("wsReqTitle").textContent = req.title;
+      document.getElementById("wsReqRequester").textContent = `• Solicitante: ${req.requester}`;
+      document.getElementById("wsReqStatusInput").value = req.status;
+
+      document.getElementById("workspaceOverlay").style.display = "flex";
+      renderWorkspace();
+    }
+
+    function closeWorkspace() {
+      document.getElementById("workspaceOverlay").style.display = "none";
+      activeReqId = null;
+    }
+
+    function buildMoveSelect(fromCol, idx) {
+      const cols = [
+        { id: "todo", label: "Por Hacer" },
+        { id: "done", label: "Completada" },
+        { id: "recurring", label: "Recurrente" },
+        { id: "dates", label: "Fecha Imp." }
+      ];
+      return `
+        <select class="move-select" title="Mover a otra columna" onchange="moveTask('${fromCol}', ${idx}, this.value)">
+          <option value="" disabled selected>Mover a...</option>
+          ${cols.filter(c => c.id !== fromCol).map(c => `<option value="${c.id}">${c.label}</option>`).join('')}
+        </select>
+      `;
+    }
+
+    function renderWorkspace() {
+      const req = state.find(r => r.id === activeReqId);
+      if (!req) return;
+
+      // 1. Tareas por Hacer
+      document.getElementById("countTodo").textContent = req.todo.length;
+      document.getElementById("listTodo").innerHTML = req.todo.map((itemRaw, idx) => {
+        const item = normalizeTask(itemRaw);
+        return `
+          <div class="item-card" draggable="true" ondragstart="handleDragStart(event, 'todo', ${idx})" ondragend="handleDragEnd(event)">
+            <div class="item-main-row">
+              <span class="drag-handle" title="Arrastrar">⠿</span>
+              <input type="checkbox" onchange="moveTask('todo', ${idx}, 'done')" style="accent-color: var(--accent); cursor: pointer;">
+              <span class="item-text" style="flex:1; line-height: 1.4;">${item.text}</span>
+            </div>
+            <div class="item-actions-row">
+              ${item.isPlatform ? `<span class="platform-badge">⚡ Plataforma</span>` : ''}
+              ${item.date ? `<span class="item-date-badge blue">${item.date}</span>` : ''}
+              <button class="btn-icon" title="Editar tarea" onclick="openEditModal('todo', ${idx})">✎</button>
+              ${buildMoveSelect('todo', idx)}
+              <button class="btn-icon delete" title="Eliminar" onclick="removeTodo(${idx})">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 2. Tareas Completadas
+      document.getElementById("countDone").textContent = req.done.length;
+      document.getElementById("listDone").innerHTML = req.done.map((itemRaw, idx) => {
+        const item = normalizeTask(itemRaw);
+        return `
+          <div class="item-card completed" draggable="true" ondragstart="handleDragStart(event, 'done', ${idx})" ondragend="handleDragEnd(event)">
+            <div class="item-main-row">
+              <span class="drag-handle" title="Arrastrar">⠿</span>
+              <input type="checkbox" checked onchange="moveTask('done', ${idx}, 'todo')" style="accent-color: var(--accent); cursor: pointer;">
+              <span class="item-text" style="flex:1; line-height: 1.4;">${item.text}</span>
+            </div>
+            <div class="item-actions-row">
+              ${item.isPlatform ? `<span class="platform-badge">⚡ Plataforma</span>` : ''}
+              ${item.date ? `<span class="item-date-badge blue">${item.date}</span>` : ''}
+              <button class="btn-icon" title="Editar tarea" onclick="openEditModal('done', ${idx})">✎</button>
+              ${buildMoveSelect('done', idx)}
+              <button class="btn-icon delete" title="Eliminar" onclick="removeDone(${idx})">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 3. Tareas Recurrentes
+      document.getElementById("countRecurring").textContent = req.recurring.length;
+      document.getElementById("listRecurring").innerHTML = req.recurring.map((itemRaw, idx) => {
+        const text = typeof itemRaw === 'string' ? itemRaw : itemRaw.text;
+        return `
+          <div class="item-card" draggable="true" ondragstart="handleDragStart(event, 'recurring', ${idx})" ondragend="handleDragEnd(event)">
+            <div class="item-main-row">
+              <span class="drag-handle" title="Arrastrar">⠿</span>
+              <span style="color:var(--purple); font-weight:bold;">↻</span>
+              <span class="item-text" style="flex:1; line-height: 1.4;">${text}</span>
+            </div>
+            <div class="item-actions-row">
+              <button class="btn-icon" title="Editar" onclick="openEditModal('recurring', ${idx})">✎</button>
+              ${buildMoveSelect('recurring', idx)}
+              <button class="btn-icon delete" title="Eliminar" onclick="removeRecurring(${idx})">&times;</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 4. Fechas Importantes
+      document.getElementById("countDates").textContent = req.dates.length;
+      document.getElementById("listDates").innerHTML = req.dates.map((d, idx) => `
+        <div class="item-card" style="border-left: 3px solid var(--warning);" draggable="true" ondragstart="handleDragStart(event, 'dates', ${idx})" ondragend="handleDragEnd(event)">
+          <div class="item-main-row">
+            <span class="drag-handle" title="Arrastrar">⠿</span>
+            <span style="flex: 1; color: var(--text); line-height: 1.4; font-weight: 500;">${d.title}</span>
+          </div>
+          <div class="item-actions-row">
+            <span class="item-date-badge">${d.date || 'Sin fecha'}</span>
+            <button class="btn-icon" title="Editar hito" onclick="openEditModal('dates', ${idx})">✎</button>
+            ${buildMoveSelect('dates', idx)}
+            <button class="btn-icon delete" title="Eliminar fecha" onclick="removeDate(${idx})">&times;</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Modal de Edición
+    function openEditModal(col, idx) {
+      editingContext = { col, idx };
+      const req = state.find(r => r.id === activeReqId);
+      if (!req) return;
+
+      const editModal = document.getElementById("editItemModal");
+      const textInput = document.getElementById("editItemText");
+      const dateInput = document.getElementById("editItemDate");
+      const platformInput = document.getElementById("editItemPlatform");
+      const platformRow = document.getElementById("editPlatformRow");
+
+      if (col === "dates") {
+        const item = req.dates[idx];
+        textInput.value = item.title;
+        dateInput.value = item.date || "";
+        platformRow.style.display = "none";
+      } else if (col === "recurring") {
+        const item = req.recurring[idx];
+        textInput.value = typeof item === "string" ? item : item.text;
+        dateInput.value = "";
+        platformRow.style.display = "none";
+      } else {
+        const item = normalizeTask(req[col][idx]);
+        textInput.value = item.text;
+        dateInput.value = item.date || "";
+        platformInput.checked = Boolean(item.isPlatform);
+        platformRow.style.display = "block";
+      }
+
+      editModal.style.display = "flex";
+      textInput.focus();
+    }
+
+    function closeEditModal() {
+      document.getElementById("editItemModal").style.display = "none";
+      editingContext = null;
+    }
+
+    function saveItemEdit() {
+      if (!editingContext || !activeReqId) return;
+      const { col, idx } = editingContext;
+      const req = state.find(r => r.id === activeReqId);
+      if (!req) return;
+
+      const text = document.getElementById("editItemText").value.trim();
+      const date = document.getElementById("editItemDate").value;
+      const isPlatform = document.getElementById("editItemPlatform").checked;
+
+      if (!text) {
+        alert("El texto no puede quedar vacío.");
+        return;
+      }
+
+      if (col === "dates") {
+        req.dates[idx].title = text;
+        req.dates[idx].date = date || "";
+      } else if (col === "recurring") {
+        if (typeof req.recurring[idx] === "string") {
+          req.recurring[idx] = text;
+        } else {
+          req.recurring[idx].text = text;
+        }
+      } else {
+        req[col][idx] = { text, date, isPlatform };
+      }
+
+      closeEditModal();
+      syncToDrive();
+    }
+
+    // Drag & Drop
+    function handleDragStart(e, sourceCol, index) {
+      draggedItem = { sourceCol, index };
+      e.target.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", JSON.stringify(draggedItem));
+      e.dataTransfer.effectAllowed = "move";
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove("dragging");
+      document.querySelectorAll(".work-col").forEach(col => col.classList.remove("drag-over"));
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+      const col = e.currentTarget;
+      col.classList.add("drag-over");
+    }
+
+    function dragLeave(e) {
+      e.currentTarget.classList.remove("drag-over");
+    }
+
+    function handleDrop(e, targetCol) {
+      e.preventDefault();
+      e.currentTarget.classList.remove("drag-over");
+      if (!draggedItem) return;
+
+      moveTask(draggedItem.sourceCol, draggedItem.index, targetCol);
+      draggedItem = null;
+    }
+
+    function moveTask(fromCol, idx, toCol) {
+      if (fromCol === toCol) return;
+      const req = state.find(r => r.id === activeReqId);
+      if (!req) return;
+
+      let itemObj = { text: "", date: "", isPlatform: false };
+
+      if (fromCol === "dates") {
+        const item = req.dates.splice(idx, 1)[0];
+        itemObj.text = item.title;
+        itemObj.date = item.date;
+      } else {
+        const raw = req[fromCol].splice(idx, 1)[0];
+        itemObj = normalizeTask(raw);
+      }
+
+      if (toCol === "dates") {
+        req.dates.push({
+          id: Date.now().toString(),
+          title: itemObj.text,
+          date: itemObj.date || "Pendiente"
+        });
+      } else if (toCol === "recurring") {
+        req.recurring.push(itemObj.text);
+        if (!masterRecurringTasks.includes(itemObj.text)) {
+          masterRecurringTasks.push(itemObj.text);
+          syncMasterRecurringToDrive();
+        }
+      } else {
+        req[toCol].push(itemObj);
+      }
+
+      syncToDrive();
+    }
+
+    function addTodo() {
+      const input = document.getElementById("inputTodo");
+      const dateInput = document.getElementById("inputTodoDate");
+      const platformInput = document.getElementById("inputTodoPlatform");
+
+      const text = input.value.trim();
+      const date = dateInput.value;
+      const isPlatform = platformInput.checked;
+
+      if (!text) return;
+
+      const req = state.find(r => r.id === activeReqId);
+      req.todo.push({ text, date, isPlatform });
+
+      input.value = "";
+      dateInput.value = "";
+      platformInput.checked = false;
+
+      syncToDrive();
+    }
+
+    function removeTodo(idx) {
+      const req = state.find(r => r.id === activeReqId);
+      req.todo.splice(idx, 1);
+      syncToDrive();
+    }
+    function removeDone(idx) {
+      const req = state.find(r => r.id === activeReqId);
+      req.done.splice(idx, 1);
+      syncToDrive();
+    }
+
+    function addRecurring() {
+      const input = document.getElementById("inputRecurring");
+      const val = input.value.trim();
+      if (!val) return;
+
+      if (!masterRecurringTasks.includes(val)) {
+        masterRecurringTasks.push(val);
+        syncMasterRecurringToDrive();
+      }
+
+      state.forEach(req => {
+        if (!req.recurring) req.recurring = [];
+        const exists = req.recurring.some(r => (typeof r === 'string' ? r : r.text) === val);
+        if (!exists) req.recurring.push(val);
+      });
+
+      input.value = "";
+      syncToDrive();
+    }
+    function removeRecurring(idx) {
+      const req = state.find(r => r.id === activeReqId);
+      req.recurring.splice(idx, 1);
+      syncToDrive();
+    }
+
+    function addDateMilestone() {
+      const titleInput = document.getElementById("inputDateTitle");
+      const dateInput = document.getElementById("inputDateVal");
+      const title = titleInput.value.trim();
+      const date = dateInput.value;
+
+      if (!title) {
+        alert("Ingresa una descripción para la fecha.");
+        titleInput.focus();
+        return;
+      }
+
+      const req = state.find(r => r.id === activeReqId);
+      if (!req.dates) req.dates = [];
+
+      req.dates.push({
+        id: Date.now().toString(),
+        title: title,
+        date: date || "Pendiente"
+      });
+
+      titleInput.value = "";
+      dateInput.value = "";
+      syncToDrive();
+    }
+    function removeDate(idx) {
+      const req = state.find(r => r.id === activeReqId);
+      req.dates.splice(idx, 1);
+      syncToDrive();
+    }
+
+    function deleteCurrentReq() {
+      if (confirm("¿Estás seguro de eliminar este requerimiento y todo su contenido?")) {
+        state = state.filter(r => r.id !== activeReqId);
+        closeWorkspace();
+        syncToDrive();
+      }
+    }
+
+    loadDataFromDrive();
+  </script>
+</body>
+</html>
