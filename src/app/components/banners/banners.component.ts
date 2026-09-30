@@ -35,15 +35,11 @@ import { RequirementService } from '../../services/requirement.service';
                   @if (item.isPlatform) {
                     <span class="platform-badge">⚡ Plat.</span>
                   }
-                  @if (item.type === 'todo') {
-                    <input
-                      type="checkbox"
-                      title="Marcar completada"
-                      (change)="completeTask(item.reqId, item.index)"
-                    />
-                  } @else {
-                    <span class="item-date-badge">Hito</span>
-                  }
+                  <input
+                    type="checkbox"
+                    title="Marcar completada"
+                    (change)="completeTask(item.reqId, item.index)"
+                  />
                 </div>
               }
             </div>

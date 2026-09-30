@@ -88,19 +88,6 @@ export class RequirementService {
           });
         }
       });
-
-      (req.dates || []).forEach((d, idx) => {
-        if (d.date && d.date <= tomorrow) {
-          items.push({
-            type: 'date',
-            reqId: req.id,
-            reqCode: req.code,
-            index: idx,
-            text: d.title,
-            date: d.date
-          });
-        }
-      });
     }
 
     // Ordenar cronológicamente: vencidas/hoy primero, luego mañana
