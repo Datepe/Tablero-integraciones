@@ -51,6 +51,14 @@ export class RequirementService {
     });
   });
 
+  readonly todayISODate = computed(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
+
   readonly tomorrowISODate = computed(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
@@ -60,14 +68,15 @@ export class RequirementService {
     return `${year}-${month}-${day}`;
   });
 
-  readonly tomorrowTasks = computed<BannerItem[]>(() => {
+  readonly pendingDateTasks = computed<BannerItem[]>(() => {
+    const today = this.todayISODate();
     const tomorrow = this.tomorrowISODate();
     const items: BannerItem[] = [];
 
     for (const req of this.requirements()) {
       (req.todo || []).forEach((t, idx) => {
         const item = this.normalizeTask(t);
-        if (item.date === tomorrow) {
+        if (item.date && item.date <= tomorrow) {
           items.push({
             type: 'todo',
             reqId: req.id,
@@ -81,7 +90,7 @@ export class RequirementService {
       });
 
       (req.dates || []).forEach((d, idx) => {
-        if (d.date === tomorrow) {
+        if (d.date && d.date <= tomorrow) {
           items.push({
             type: 'date',
             reqId: req.id,
@@ -94,8 +103,11 @@ export class RequirementService {
       });
     }
 
-    return items;
+    // Ordenar cronológicamente: vencidas/hoy primero, luego mañana
+    return items.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   });
+
+  readonly tomorrowTasks = this.pendingDateTasks;
 
   readonly platformTasks = computed<BannerItem[]>(() => {
     const items: BannerItem[] = [];

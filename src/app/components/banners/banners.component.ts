@@ -7,18 +7,31 @@ import { RequirementService } from '../../services/requirement.service';
   template: `
     @if (tomorrowTasks().length > 0 || platformTasks().length > 0) {
       <div class="dashboard-top-panels">
-        <!-- Banner Mañana -->
+        <!-- Banner Pendientes (Hoy y Próximos) -->
         @if (tomorrowTasks().length > 0) {
           <section class="info-banner banner-tomorrow">
             <div class="banner-header">
-              <span class="banner-title">📅 Pendientes para Mañana</span>
-              <span class="banner-date-badge">Mañana ({{ tomorrowDate() }})</span>
+              <span class="banner-title">📅 Tareas Pendientes (Hoy y Próximos)</span>
+              <span class="banner-date-badge">
+                {{ tomorrowTasks().length }} pendiente{{ tomorrowTasks().length > 1 ? 's' : '' }}
+              </span>
             </div>
             <div class="banner-list">
               @for (item of tomorrowTasks(); track item.reqId + '-' + item.index) {
                 <div class="banner-item">
                   <span class="req-tag">{{ item.reqCode }}</span>
                   <span class="item-text">{{ item.text }}</span>
+                  @if (item.date) {
+                    @if (item.date < todayDate()) {
+                      <span class="item-date-badge danger" title="Fecha límite vencida">Vencida ({{ item.date }})</span>
+                    } @else if (item.date === todayDate()) {
+                      <span class="item-date-badge today">Hoy</span>
+                    } @else if (item.date === tomorrowDate()) {
+                      <span class="item-date-badge blue">Mañana</span>
+                    } @else {
+                      <span class="item-date-badge">{{ item.date }}</span>
+                    }
+                  }
                   @if (item.isPlatform) {
                     <span class="platform-badge">⚡ Plat.</span>
                   }
@@ -149,6 +162,22 @@ import { RequirementService } from '../../services/requirement.service';
         color: var(--text);
       }
 
+      .item-date-badge {
+        &.today {
+          background: rgba(245, 158, 11, 0.22);
+          color: #fbbf24;
+          border: 1px solid rgba(245, 158, 11, 0.45);
+          font-weight: 700;
+        }
+
+        &.danger {
+          background: rgba(239, 68, 68, 0.22);
+          color: #fca5a5;
+          border: 1px solid rgba(239, 68, 68, 0.45);
+          font-weight: 700;
+        }
+      }
+
       input[type="checkbox"] {
         accent-color: var(--accent);
         cursor: pointer;
@@ -167,6 +196,7 @@ export class BannersComponent {
 
   readonly tomorrowTasks = this.reqService.tomorrowTasks;
   readonly platformTasks = this.reqService.platformTasks;
+  readonly todayDate = this.reqService.todayISODate;
   readonly tomorrowDate = this.reqService.tomorrowISODate;
 
   completeTask(reqId: string, index: number) {
